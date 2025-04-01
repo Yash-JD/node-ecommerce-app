@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const authRoute = require("./routes/auth.route");
+const staticRoute = require("./routes/staticRoute");
 const path = require("path");
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: true })); // Parses URL-encoded form data
 app.use(cookieParser()); // Parses the cookies
 
 app.use("/api/auth", authRoute);
+app.use("/pages", staticRoute);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
