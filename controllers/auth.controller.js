@@ -31,7 +31,7 @@ module.exports.signup = async (req, res) => {
     const data = [username, email, hashPass, role];
     const result = await db.execute(query, data);
     return res.status(201).json({
-      msg: `${user[0].name} created successfullly.`,
+      msg: `${result[0].name} created successfullly.`,
     });
   } catch (error) {
     console.error(error);
@@ -46,7 +46,7 @@ module.exports.login = async (req, res) => {
     const { email, password, role } = req.body;
 
     // check if data is valid
-    if (!password || !email || !role) {
+    if (!email || !password || !role) {
       return res.status(400).json({
         message: "Field cannot be empty.",
       });
@@ -68,16 +68,15 @@ module.exports.login = async (req, res) => {
           role: user[0].role,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "1h",
+          expiresIn: "3h",
         });
         // then send token with cookie as response
         res
           .cookie("uid", token)
           .status(200)
           .json({ msg: "Logged in successfully." });
-        // const cookie = res.cookie("uid", token).render("home.ejs", cookie);
       } else {
-        return res.status(401).json({
+        return res.status(403).json({
           msg: "Please enter correct password.",
         });
       }
@@ -94,7 +93,7 @@ module.exports.login = async (req, res) => {
   }
 };
 
-module.exports.logout = async (req, res) => {
+module.exports.logout = (req, res) => {
   res.clearCookie("uid", { path: "/" });
   res.status(200).json({ message: "Logged out successfully" });
   // console.log(req.cookies?.uid);
