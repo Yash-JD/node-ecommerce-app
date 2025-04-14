@@ -30,7 +30,7 @@ module.exports.checkRole = (req, res, next) => {
   const { role } = req.user;
   if (role === "seller") next();
   else
-    return res.status(401).json({
+    return res.status(403).json({
       msg: "Unauthorised!",
     });
 };
@@ -40,7 +40,7 @@ module.exports.checkLogin = (req, res, next) => {
 
   // check if user is already logged in
   if (userUid && verifyToken(userUid))
-    return res.status(301).send({
+    return res.status(302).send({
       message: "Already logged In.",
       action: "Please logout first.",
     });
@@ -63,7 +63,7 @@ module.exports.checkSellerProducts = async (req, res, next) => {
       next();
     } else {
       // deny to update the product
-      return res.status(401).json({
+      return res.status(403).json({
         message: `Unauthorised to ${req.method} product: ${productId}`,
       });
     }

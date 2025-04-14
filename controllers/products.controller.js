@@ -7,7 +7,6 @@ module.exports.getAllProducts = async (req, res) => {
       products: result,
     });
   } catch (error) {
-    // console.error(error);
     return res.status(500).json({
       message: "Cannot find product, please try again later",
     });

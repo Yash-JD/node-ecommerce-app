@@ -6,6 +6,7 @@ const {
   addProduct,
   getProductById,
 } = require("../controllers/products.controller");
+
 const {
   checkAuth,
   checkRole,
