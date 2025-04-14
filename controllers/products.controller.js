@@ -1,6 +1,18 @@
 const db = require("../config/db");
 
-module.exports.getAllProducts = (req, res) => {};
+module.exports.getAllProducts = async (req, res) => {
+  try {
+    const [result] = await db.execute("SELECT * FROM products");
+    res.send({
+      products: result,
+    });
+  } catch (error) {
+    // console.error(error);
+    return res.status(500).json({
+      message: "Cannot find product, please try again later",
+    });
+  }
+};
 
 module.exports.addProduct = async (req, res) => {
   try {
@@ -28,15 +40,35 @@ module.exports.addProduct = async (req, res) => {
       message: "Product added successfully",
     });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return res.status(500).json({
       message: "Cannot add product, please try again later",
-      error,
     });
   }
 };
 
-module.exports.getProduct = (req, res) => {};
+module.exports.getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [product] = await db.execute("SELECT * FROM products WHERE id = ?", [
+      id,
+    ]);
+    if (product.length > 0) {
+      res.status(200).send({
+        data: product[0],
+      });
+    } else {
+      res.status(400).json({
+        message: "Such product doesnot exists",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Cannot get product, please try again later",
+    });
+  }
+};
 
 module.exports.updateProduct = (req, res) => {};
 

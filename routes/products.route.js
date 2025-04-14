@@ -1,10 +1,10 @@
 const express = require("express");
 const {
   getAllProducts,
-  getProduct,
   updateProduct,
   deleteProduct,
   addProduct,
+  getProductById,
 } = require("../controllers/products.controller");
 const { checkAuth } = require("../middlewares/auth.middleware");
 const router = express.Router();
@@ -12,7 +12,7 @@ const router = express.Router();
 router.route("/").get(getAllProducts).post(checkAuth, addProduct);
 router
   .route("/:id")
-  .get(getProduct)
+  .get(getProductById)
   .patch(checkAuth, updateProduct)
   .delete(checkAuth, deleteProduct);
 
