@@ -78,6 +78,42 @@ module.exports.getProductById = async (req, res) => {
   }
 };
 
-module.exports.updateProduct = (req, res) => {};
+module.exports.updateProduct = async (req, res) => {
+  try {
+    // create query and data to be updated
+    let query = `UPDATE products SET `;
+    let data = [];
+    for (let i in req.body) {
+      query += i + "=? ";
+      data.push(req.body[i]);
+    }
+    query += "WHERE id=?";
+    data.push(req.params.id);
 
-module.exports.deleteProduct = (req, res) => {};
+    await db.execute(query, data);
+    res.status(200).json({
+      message: "Data updated successfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Cannot update product, please try again later",
+    });
+  }
+};
+
+module.exports.deleteProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    await db
+      .execute("DELETE FROM products WHERE id = ?", [productId])
+      .then(() => {
+        res.status(200).send({
+          message: "Product deleted successfully.",
+        });
+      });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Cannot delete product, please try again later",
+    });
+  }
+};

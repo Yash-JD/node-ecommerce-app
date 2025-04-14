@@ -1,4 +1,5 @@
-const { verifyToken } = require("../utils/verifyToken");
+const { verifyToken } = require("../utils/helpers");
+const db = require("../config/db");
 
 module.exports.checkAuth = (req, res, next) => {
   const userUid = req.cookies?.uid;
@@ -11,7 +12,12 @@ module.exports.checkAuth = (req, res, next) => {
 
   try {
     const verifyedUser = verifyToken(userUid);
-    req.user = verifyedUser;
+    req.user = {
+      id: verifyedUser.id,
+      name: verifyedUser.name,
+      email: verifyedUser.email,
+      role: verifyedUser.role,
+    };
     next();
   } catch (error) {
     return res.status(500).json({
@@ -40,4 +46,30 @@ module.exports.checkLogin = (req, res, next) => {
     });
 
   next();
+};
+
+module.exports.checkSellerProducts = async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+
+    // check if seller has any product listed or not
+    const [listProducts] = await db.execute(
+      "SELECT * FROM products WHERE seller_id = ? AND id = ?",
+      [req.user.id, productId]
+    );
+
+    // if seller has its any prouducts listed then update/delete it
+    if (listProducts.length > 0) {
+      next();
+    } else {
+      // deny to update the product
+      return res.status(401).json({
+        message: `Unauthorised to ${req.method} product: ${productId}`,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: `Internal server error at ${req.method} product`,
+    });
+  }
 };
