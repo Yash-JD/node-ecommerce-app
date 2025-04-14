@@ -6,14 +6,14 @@ const {
   addProduct,
   getProductById,
 } = require("../controllers/products.controller");
-const { checkAuth } = require("../middlewares/auth.middleware");
+const { checkAuth, checkRole } = require("../middlewares/auth.middleware");
 const router = express.Router();
 
-router.route("/").get(getAllProducts).post(checkAuth, addProduct);
+router.route("/").get(getAllProducts).post(checkAuth, checkRole, addProduct);
 router
   .route("/:id")
   .get(getProductById)
-  .patch(checkAuth, updateProduct)
-  .delete(checkAuth, deleteProduct);
+  .patch(checkAuth, checkRole, updateProduct)
+  .delete(checkAuth, checkRole, deleteProduct);
 
 module.exports = router;

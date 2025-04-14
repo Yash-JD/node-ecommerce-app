@@ -29,9 +29,9 @@ module.exports.signup = async (req, res) => {
     const query =
       "INSERT INTO users(name, email, password, role) VALUES (?,?,?,?)";
     const data = [username, email, hashPass, role];
-    const result = await db.execute(query, data);
+    await db.execute(query, data);
     return res.status(201).json({
-      msg: `${result[0].name} created successfullly.`,
+      msg: `Signed Up successfully!`,
     });
   } catch (error) {
     console.error(error);

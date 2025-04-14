@@ -20,11 +20,24 @@ module.exports.checkAuth = (req, res, next) => {
   }
 };
 
-// module.exports.checkLogin = (req, res, next) => {
-//   const userUid = req.cookies?.uid;
+module.exports.checkRole = (req, res, next) => {
+  const { role } = req.user;
+  if (role === "seller") next();
+  else
+    return res.status(401).json({
+      msg: "Unauthorised!",
+    });
+};
 
-//   // check if user is already logged in
-//   if (userUid && verifyToken(userUid)) return res.redirect("/pages/home");
+module.exports.checkLogin = (req, res, next) => {
+  const userUid = req.cookies?.uid;
 
-//   next();
-// };
+  // check if user is already logged in
+  if (userUid && verifyToken(userUid))
+    return res.status(301).send({
+      message: "Already logged In.",
+      action: "Please logout first.",
+    });
+
+  next();
+};

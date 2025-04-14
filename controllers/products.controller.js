@@ -17,6 +17,7 @@ module.exports.getAllProducts = async (req, res) => {
 module.exports.addProduct = async (req, res) => {
   try {
     const { name, description, price, category, imageUrl } = req.body;
+    const user_id = req.user.id;
 
     if ((!name, !description, !price, !category, !imageUrl)) {
       res.status(204).send({
@@ -32,8 +33,15 @@ module.exports.addProduct = async (req, res) => {
 
     // insert into products table
     const query =
-      "INSERT INTO products(name, description, price, category_id, imageUrl) VALUES (?, ?, ?, ?, ?)";
-    const data = [name, description, price, categoryData.insertId, imageUrl];
+      "INSERT INTO products(name, description, price, category_id, imageUrl, seller_id) VALUES (?, ?, ?, ?, ?, ?)";
+    const data = [
+      name,
+      description,
+      price,
+      categoryData.insertId,
+      imageUrl,
+      user_id,
+    ];
 
     await db.execute(query, data);
     res.status(201).send({
