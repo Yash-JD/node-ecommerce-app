@@ -83,11 +83,15 @@ module.exports.updateProduct = async (req, res) => {
     let query = `UPDATE products SET `;
     let data = [];
     for (let i in req.body) {
-      query += i + "=? ";
+      query += i + "=?, ";
       data.push(req.body[i]);
     }
-    query += "WHERE id=?";
+    query = query.slice(0, -2);
+
+    query += " WHERE id=?";
     data.push(req.params.id);
+
+    console.log({ query });
 
     await db.execute(query, data);
     res.status(200).json({
