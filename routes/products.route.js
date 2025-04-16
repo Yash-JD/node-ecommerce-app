@@ -37,7 +37,20 @@ router
 router
   .route("/:id")
   .get(getProductById)
-  .patch(checkAuth, checkRole, checkSellerProducts, updateProduct)
+  .patch(
+    checkAuth,
+    checkRole,
+    checkSellerProducts,
+    (req, res, next) => {
+      upload(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        }
+        next(); // Proceed to updateProduct
+      });
+    },
+    updateProduct
+  )
   .delete(checkAuth, checkRole, checkSellerProducts, deleteProduct);
 
 module.exports = router;

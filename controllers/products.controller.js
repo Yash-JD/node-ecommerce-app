@@ -16,8 +16,6 @@ module.exports.getAllProducts = async (req, res) => {
 
 module.exports.addProduct = async (req, res) => {
   try {
-    // console.log(req);
-    // console.log(req.body);
     const { name, description, price, category } = req.body;
     const user_id = req.user.id;
     const image = req.file;
@@ -99,6 +97,23 @@ module.exports.updateProduct = async (req, res) => {
       query += i + "=?, ";
       data.push(req.body[i]);
     }
+
+    // check if there is image to be updated ?
+    const image = req.file;
+    if (image) {
+      // upload image to cloudinary
+      const imageUrl = await uploadFileToCloudinary(image, "e-commerce");
+      // console.log(imageUrl.secure_url);
+      if (!imageUrl) {
+        return res.status(400).json({
+          message: "Failed to upload image to Cloudinary",
+        });
+      }
+      query += "imageUrl=?  ";
+      data.push(imageUrl.secure_url);
+    }
+
+    // remove extra comma & space
     query = query.slice(0, -2);
 
     query += " WHERE id=?";

@@ -75,8 +75,6 @@ module.exports.uploadFileToCloudinary = async (file, folder) => {
     resource_type: "auto",
   };
 
-  // console.log("temp file path", file.tempFilePath);
-
   // if (quality) options.quality = quality;
 
   return await cloudinary.uploader.upload(file.path, options);
