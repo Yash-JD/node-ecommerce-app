@@ -3,7 +3,15 @@ const { uploadFileToCloudinary } = require("../utils/helpers");
 
 module.exports.getAllProducts = async (req, res) => {
   try {
-    const [result] = await db.execute("SELECT * FROM products");
+    const limit = parseInt(req.query.limit) || 10;
+
+    const category = req.query.category;
+    let categories = category.split(",");
+
+    const [result] = await db.query(
+      "SELECT products.id, products.name, products.description, products.price, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category IN (?) LIMIT ?;",
+      [categories, limit]
+    );
     res.send({
       products: result,
     });
@@ -69,12 +77,13 @@ module.exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [product] = await db.execute("SELECT * FROM products WHERE id = ?", [
-      id,
-    ]);
+    const [product] = await db.execute(
+      "SELECT products.id, products.name, products.description, products.price, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id HAVING id=?",
+      [id]
+    );
     if (product.length > 0) {
       return res.status(200).send({
-        data: product[0],
+        data: product,
       });
     } else {
       return res.status(400).json({

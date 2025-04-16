@@ -46,12 +46,12 @@ module.exports.signup = async (req, res) => {
     }
 
     // generate otp
-    const response = await generateOTP(email);
-    if (!response) {
-      return res.status(500).json({
-        message: "error in sending otp",
-      });
-    }
+    // const response = await generateOTP(email);
+    // if (!response) {
+    //   return res.status(500).json({
+    //     message: "error in sending otp",
+    //   });
+    // }
 
     // insert into database
     const hashPass = await bcrypt.hash(password, 10);
