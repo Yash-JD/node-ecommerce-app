@@ -12,9 +12,18 @@ const {
   checkRole,
   checkSellerProducts,
 } = require("../middlewares/auth.middleware");
+
 const router = express.Router();
 
-router.route("/").get(getAllProducts).post(checkAuth, checkRole, addProduct);
+router.post(
+  "/",
+  checkAuth,
+  checkRole,
+
+  addProduct
+);
+
+// .get(getAllProducts)
 router
   .route("/:id")
   .get(getProductById)

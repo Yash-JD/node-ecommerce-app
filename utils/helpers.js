@@ -1,6 +1,70 @@
 const jwt = require("jsonwebtoken");
-const db = require("../config/db");
+const cloudinary = require("../config/cloudinary");
+const nodemailer = require("nodemailer");
 
 module.exports.verifyToken = (token) => {
   return jwt.verify(token, process.env.JWT_SECRET_KEY);
+};
+
+module.exports.validateEmail = (email) => {
+  // check if it contains more than one @
+  if (email.indexOf("@") != email.lastIndexOf("@")) return false;
+
+  // check if it contains more than one . after @
+  const index = email.indexOf("@");
+  const domain = email.slice(index + 1);
+  if (domain.indexOf(".") != domain.lastIndexOf(".")) return false;
+
+  // check if it contains capital letters
+  if (/[A-Z]/.test(email)) return false;
+
+  //check if email contains any other special characters other than @ and .
+  if (
+    email.split("").some((x) => {
+      return '!#$%^&*(),?":{}|<>'.includes(x);
+    })
+  )
+    return false;
+  else return true;
+};
+
+module.exports.validatePassword = (password) => {
+  // check if it contains atlease capital letters
+  if (
+    password.length > 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    password.split("").some((x) => {
+      return '!#$%^&*(),?":{}|<>'.includes(x);
+    })
+  )
+    return true;
+  else return false;
+};
+
+module.exports.generateOTP = async (sender_mail) => {
+  try {
+    const sender = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_SENDER_ID,
+        pass: process.env.GMAIL_SENDER_PASS,
+      },
+    });
+    const otp = Math.floor(Math.random() * 999999 + 100000);
+    const receiver = {
+      from: process.env.GMAIL_SENDER_ID,
+      to: sender_mail,
+      subject: "Verify OTP",
+      text: `${otp}`,
+    };
+    const info = await sender.sendMail(receiver);
+    console.log("Email sent:", info.response);
+    console.log("otp:", otp);
+    return true;
+  } catch (error) {
+    console.log("Error:", error);
+    return false;
+  }
 };

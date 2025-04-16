@@ -1,6 +1,11 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const {
+  validateEmail,
+  validatePassword,
+  generateOTP,
+} = require("../utils/helpers");
 
 module.exports.signup = async (req, res) => {
   try {
@@ -13,6 +18,14 @@ module.exports.signup = async (req, res) => {
       });
     }
 
+    // validate email
+    const validEmail = validateEmail(email);
+    if (!validEmail) {
+      return res.status(400).json({
+        message: "Email must contain all lowercase and no special symbols.",
+      });
+    }
+
     // check if user already exists
     const [existingUser] = await db.execute(
       "SELECT * FROM users WHERE email = ?",
@@ -22,6 +35,23 @@ module.exports.signup = async (req, res) => {
       return res.status(400).json({
         msg: "User already exists.",
       });
+
+    //validate password
+    const validPassword = validatePassword(password);
+    if (!validPassword) {
+      return res.status(400).json({
+        message:
+          "Password must contain atleat 8 characters with atleast one Uppercase, one lowercase, one number and one special character.",
+      });
+    }
+
+    // generate otp
+    const response = await generateOTP(email);
+    if (!response) {
+      return res.status(500).json({
+        message: "error in sending otp",
+      });
+    }
 
     // insert into database
     const hashPass = await bcrypt.hash(password, 10);
@@ -95,6 +125,6 @@ module.exports.login = async (req, res) => {
 
 module.exports.logout = (req, res) => {
   res.clearCookie("uid", { path: "/" });
-  res.status(200).json({ message: "Logged out successfully" });
+  return res.status(200).json({ message: "Logged out successfully" });
   // console.log(req.cookies?.uid);
 };

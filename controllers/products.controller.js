@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { uploadFileToCloudinary } = require("../utils/helpers");
 
 module.exports.getAllProducts = async (req, res) => {
   try {
@@ -15,11 +16,14 @@ module.exports.getAllProducts = async (req, res) => {
 
 module.exports.addProduct = async (req, res) => {
   try {
-    const { name, description, price, category, imageUrl } = req.body;
+    // console.log(req);
+    // console.log(req.body);
+    const { name, description, price, category, image } = req.body;
     const user_id = req.user.id;
+    // const image = req.file;
 
-    if ((!name, !description, !price, !category, !imageUrl)) {
-      res.status(204).send({
+    if (!name || !description || !price || !category || !image) {
+      return res.status(204).json({
         message: "fields cannot be empty",
       });
     }
@@ -38,12 +42,12 @@ module.exports.addProduct = async (req, res) => {
       description,
       price,
       categoryData.insertId,
-      imageUrl,
+      image,
       user_id,
     ];
 
     await db.execute(query, data);
-    res.status(201).send({
+    return res.status(201).send({
       message: "Product added successfully",
     });
   } catch (error) {
@@ -62,11 +66,11 @@ module.exports.getProductById = async (req, res) => {
       id,
     ]);
     if (product.length > 0) {
-      res.status(200).send({
+      return res.status(200).send({
         data: product[0],
       });
     } else {
-      res.status(400).json({
+      return res.status(400).json({
         message: "Such product doesnot exists",
       });
     }
@@ -91,10 +95,10 @@ module.exports.updateProduct = async (req, res) => {
     query += " WHERE id=?";
     data.push(req.params.id);
 
-    console.log({ query });
+    // console.log({ query });
 
     await db.execute(query, data);
-    res.status(200).json({
+    return res.status(200).json({
       message: "Data updated successfully.",
     });
   } catch (error) {
@@ -110,7 +114,7 @@ module.exports.deleteProduct = async (req, res) => {
     await db
       .execute("DELETE FROM products WHERE id = ?", [productId])
       .then(() => {
-        res.status(200).send({
+        return res.status(200).send({
           message: "Product deleted successfully.",
         });
       });
