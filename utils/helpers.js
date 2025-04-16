@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary");
-// const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 
 module.exports.verifyToken = (token) => {
   return jwt.verify(token, process.env.JWT_SECRET_KEY);
@@ -43,31 +43,31 @@ module.exports.validatePassword = (password) => {
   else return false;
 };
 
-// module.exports.generateOTP = async (sender_mail) => {
-//   try {
-//     const sender = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
-//         user: process.env.GMAIL_SENDER_ID,
-//         pass: process.env.GMAIL_SENDER_PASS,
-//       },
-//     });
-//     const otp = Math.floor(Math.random() * 999999 + 100000);
-//     const receiver = {
-//       from: process.env.GMAIL_SENDER_ID,
-//       to: sender_mail,
-//       subject: "Verify OTP",
-//       text: `${otp}`,
-//     };
-//     const info = await sender.sendMail(receiver);
-//     console.log("Email sent:", info.response);
-//     console.log("otp:", otp);
-//     return true;
-//   } catch (error) {
-//     console.log("Error:", error);
-//     return false;
-//   }
-// };
+module.exports.generateOTP = async (sender_mail) => {
+  try {
+    const sender = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_SENDER_ID,
+        pass: process.env.GMAIL_SENDER_PASS,
+      },
+    });
+    const otp = Math.floor(Math.random() * 999999 + 100000);
+    const receiver = {
+      from: process.env.GMAIL_SENDER_ID,
+      to: sender_mail,
+      subject: "Verification OTP",
+      text: `${otp}`,
+    };
+    const info = await sender.sendMail(receiver);
+    // console.log("Email sent:", info.response);
+    console.log("otp:", otp);
+    return otp;
+  } catch (error) {
+    console.log("Error:", error);
+    return false;
+  }
+};
 
 module.exports.uploadFileToCloudinary = async (file, folder) => {
   const options = {

@@ -5,6 +5,7 @@ const {
   validateEmail,
   validatePassword,
   generateOTP,
+  verifyToken,
 } = require("../utils/helpers");
 
 module.exports.signup = async (req, res) => {
@@ -44,27 +45,35 @@ module.exports.signup = async (req, res) => {
           "Password must contain atleat 8 characters with atleast one Uppercase, one lowercase, one number and one special character.",
       });
     }
-
-    // generate otp
-    // const response = await generateOTP(email);
-    // if (!response) {
-    //   return res.status(500).json({
-    //     message: "error in sending otp",
-    //   });
-    // }
-
-    // insert into database
+    // hash the password
     const hashPass = await bcrypt.hash(password, 10);
 
-    const query =
-      "INSERT INTO users(name, email, password, role) VALUES (?,?,?,?)";
-    const data = [username, email, hashPass, role];
-    await db.execute(query, data);
-    return res.status(201).json({
-      msg: `Signed Up successfully!`,
-    });
+    // generate otp
+    const response = await generateOTP(email);
+    if (response) {
+      // make token of otp, email, hashPass
+      const payload = {
+        otp: response,
+        username,
+        email,
+        hashPass,
+        role,
+      };
+      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+        expiresIn: "1m",
+      });
+      // then send token with cookie as response
+      res
+        .cookie("signupOTP", token, { maxAge: 60000 })
+        .status(200)
+        .json({ msg: "OTP sent successfully." });
+    } else {
+      return res.status(500).json({
+        message: "error in sending otp",
+      });
+    }
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return res.status(500).json({
       message: "You cannot be registered, please try again later",
     });
@@ -127,4 +136,35 @@ module.exports.logout = (req, res) => {
   res.clearCookie("uid", { path: "/" });
   return res.status(200).json({ message: "Logged out successfully" });
   // console.log(req.cookies?.uid);
+};
+
+module.exports.verifyOTP = async (req, res) => {
+  try {
+    const userOTP = parseInt(req.body.otp);
+
+    // verify token if it is unchanged ?
+    const { otp, username, email, hashPass, role } = verifyToken(
+      req.cookies?.signupOTP
+    );
+
+    // verify otp of frontend and original otp (generate from signup & is in cookie)
+    if (userOTP === otp) {
+      // insert into database
+      const query =
+        "INSERT INTO users(name, email, password, role) VALUES (?,?,?,?)";
+      const data = [username, email, hashPass, role];
+      await db.execute(query, data).then(() => res.clearCookie("signupOTP"));
+      return res.status(201).json({
+        msg: `Signed Up successfully!`,
+      });
+    } else {
+      return res.status(400).json({
+        msg: `Wrong OTP`,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Cannot verify otp, please try again later",
+    });
+  }
 };
