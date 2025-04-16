@@ -9,7 +9,7 @@ const {
 
 const {
   checkAuth,
-  ckeckSellerRole,
+  checkSellerRole,
   checkSellerProducts,
 } = require("../middlewares/auth.middleware");
 
@@ -21,7 +21,7 @@ router
   .get(getAllProducts)
   .post(
     checkAuth,
-    ckeckSellerRole,
+    checkSellerRole,
     (req, res, next) => {
       upload(req, res, (err) => {
         if (err) {
@@ -39,7 +39,7 @@ router
   .get(getProductById)
   .patch(
     checkAuth,
-    ckeckSellerRole,
+    checkSellerRole,
     checkSellerProducts,
     (req, res, next) => {
       upload(req, res, (err) => {
@@ -51,6 +51,6 @@ router
     },
     updateProduct
   )
-  .delete(checkAuth, ckeckSellerRole, checkSellerProducts, deleteProduct);
+  .delete(checkAuth, checkSellerRole, checkSellerProducts, deleteProduct);
 
 module.exports = router;

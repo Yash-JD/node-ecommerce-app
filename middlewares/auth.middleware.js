@@ -26,7 +26,7 @@ module.exports.checkAuth = (req, res, next) => {
   }
 };
 
-module.exports.ckeckSellerRole = (req, res, next) => {
+module.exports.checkSellerRole = (req, res, next) => {
   const { role } = req.user;
   if (role === "seller") next();
   else
