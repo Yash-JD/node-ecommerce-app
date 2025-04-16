@@ -68,3 +68,16 @@ module.exports.generateOTP = async (sender_mail) => {
     return false;
   }
 };
+
+module.exports.uploadFileToCloudinary = async (file, folder) => {
+  const options = {
+    folder: folder,
+    resource_type: "auto",
+  };
+
+  // console.log("temp file path", file.tempFilePath);
+
+  // if (quality) options.quality = quality;
+
+  return await cloudinary.uploader.upload(file.path, options);
+};

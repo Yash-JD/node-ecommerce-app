@@ -14,14 +14,24 @@ const {
 } = require("../middlewares/auth.middleware");
 
 const router = express.Router();
+const upload = require("../config/multerStorage");
 
-router.post(
-  "/",
-  checkAuth,
-  checkRole,
-
-  addProduct
-);
+router
+  .route("/")
+  .get(getAllProducts)
+  .post(
+    checkAuth,
+    checkRole,
+    (req, res, next) => {
+      upload(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        }
+        next(); // Proceed to addProduct
+      });
+    },
+    addProduct
+  );
 
 // .get(getAllProducts)
 router

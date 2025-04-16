@@ -18,9 +18,9 @@ module.exports.addProduct = async (req, res) => {
   try {
     // console.log(req);
     // console.log(req.body);
-    const { name, description, price, category, image } = req.body;
+    const { name, description, price, category } = req.body;
     const user_id = req.user.id;
-    // const image = req.file;
+    const image = req.file;
 
     if (!name || !description || !price || !category || !image) {
       return res.status(204).json({
@@ -34,6 +34,15 @@ module.exports.addProduct = async (req, res) => {
       [category]
     );
 
+    // upload image to cloudinary
+    const imageUrl = await uploadFileToCloudinary(image, "e-commerce");
+    // console.log(imageUrl.secure_url);
+    if (!imageUrl) {
+      return res.status(400).json({
+        message: "Failed to upload image to Cloudinary",
+      });
+    }
+
     // insert into products table
     const query =
       "INSERT INTO products(name, description, price, category_id, imageUrl, seller_id) VALUES (?, ?, ?, ?, ?, ?)";
@@ -42,7 +51,7 @@ module.exports.addProduct = async (req, res) => {
       description,
       price,
       categoryData.insertId,
-      image,
+      imageUrl.secure_url,
       user_id,
     ];
 
