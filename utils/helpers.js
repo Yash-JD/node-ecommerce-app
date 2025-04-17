@@ -31,7 +31,7 @@ module.exports.validateEmail = (email) => {
 module.exports.validatePassword = (password) => {
   // check if it contains atlease capital letters
   if (
-    password.length > 8 &&
+    password.length >= 8 &&
     /[A-Z]/.test(password) &&
     /[a-z]/.test(password) &&
     /[0-9]/.test(password) &&

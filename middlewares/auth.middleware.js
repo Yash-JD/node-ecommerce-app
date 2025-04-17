@@ -31,7 +31,7 @@ module.exports.checkUserRole = (req, res, next) => {
   if (role === "user") next();
   else
     return res.status(403).json({
-      msg: "Unauthorised!",
+      msg: "Unauthorised!, only accessed by user.",
     });
 };
 
@@ -40,7 +40,7 @@ module.exports.checkSellerRole = (req, res, next) => {
   if (role === "seller") next();
   else
     return res.status(403).json({
-      msg: "Unauthorised!",
+      msg: "Unauthorised!, only accessed by seller.",
     });
 };
 
