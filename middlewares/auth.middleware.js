@@ -26,12 +26,21 @@ module.exports.checkAuth = (req, res, next) => {
   }
 };
 
-module.exports.checkRole = (req, res, next) => {
+module.exports.checkUserRole = (req, res, next) => {
+  const { role } = req.user;
+  if (role === "user") next();
+  else
+    return res.status(403).json({
+      msg: "Unauthorised!, only accessed by user.",
+    });
+};
+
+module.exports.checkSellerRole = (req, res, next) => {
   const { role } = req.user;
   if (role === "seller") next();
   else
     return res.status(403).json({
-      msg: "Unauthorised!",
+      msg: "Unauthorised!, only accessed by seller.",
     });
 };
 

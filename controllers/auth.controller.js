@@ -23,7 +23,8 @@ module.exports.signup = async (req, res) => {
     const validEmail = validateEmail(email);
     if (!validEmail) {
       return res.status(400).json({
-        message: "Email must contain all lowercase and no special symbols.",
+        message:
+          "Email must contain all lowercase, no number domain and no special symbols.",
       });
     }
 

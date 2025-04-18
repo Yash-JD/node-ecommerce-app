@@ -3,6 +3,8 @@ require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const authRoute = require("./routes/auth.route");
 const productsRoute = require("./routes/products.route");
+const ordersRoute = require("./routes/orders.route");
+const wishlistRoute = require("./routes/wishlist.route");
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use(cookieParser()); // Parses the cookies
 // all endpoints
 app.use("/api/auth", authRoute);
 app.use("/api/products", productsRoute);
+app.use("/api/orders", ordersRoute);
+app.use("/api/wishlist", wishlistRoute);
 
 // connection establishment
 const PORT = process.env.PORT || 3001;
