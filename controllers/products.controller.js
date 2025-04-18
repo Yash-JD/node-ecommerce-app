@@ -15,11 +15,11 @@ module.exports.getAllProducts = async (req, res) => {
       // different =? & (?)
       if (categories.length === 1) {
         query +=
-          "SELECT products.id, products.name, products.description, products.price, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category = ? LIMIT ?";
+          "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category = ? LIMIT ?";
         [result] = await db.query(query, [...categories, limit]);
       } else {
         query +=
-          "SELECT products.id, products.name, products.description, products.price, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category IN (?) LIMIT ?";
+          "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category IN (?) LIMIT ?";
         [result] = await db.query(query, [categories, limit]);
       }
 
@@ -32,7 +32,7 @@ module.exports.getAllProducts = async (req, res) => {
       }
     } else {
       const [result] = await db.query(
-        "SELECT products.id, products.name, products.description, products.price, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id"
+        "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id"
       );
       res.send({
         products: result,
@@ -47,11 +47,11 @@ module.exports.getAllProducts = async (req, res) => {
 
 module.exports.addProduct = async (req, res) => {
   try {
-    const { name, description, price, category } = req.body;
+    const { name, description, price, category, quantity } = req.body;
     const user_id = req.user.id;
     const image = req.file;
 
-    if (!name || !description || !price || !category || !image) {
+    if (!name || !description || !price || !category || !image || !quantity) {
       return res.status(204).json({
         message: "fields cannot be empty",
       });
@@ -74,7 +74,7 @@ module.exports.addProduct = async (req, res) => {
 
     // insert into products table
     const query =
-      "INSERT INTO products(name, description, price, category_id, imageUrl, seller_id) VALUES (?, ?, ?, ?, ?, ?)";
+      "INSERT INTO products(name, description, price, category_id, imageUrl, seller_id, quantity) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const data = [
       name,
       description,
@@ -82,6 +82,7 @@ module.exports.addProduct = async (req, res) => {
       categoryData.insertId,
       imageUrl.secure_url,
       user_id,
+      quantity,
     ];
 
     await db.execute(query, data);
@@ -101,7 +102,7 @@ module.exports.getProductById = async (req, res) => {
     const { id } = req.params;
 
     const [product] = await db.execute(
-      "SELECT products.id, products.name, products.description, products.price, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id HAVING id=?",
+      "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id HAVING id=?",
       [id]
     );
     if (product.length > 0) {

@@ -39,18 +39,35 @@ module.exports.postOrder = async (req, res) => {
     const userId = req.user.id;
 
     const [data] = await db.query(
-      "SELECT price, seller_id FROM products WHERE id=?",
+      "SELECT price, seller_id, quantity FROM products WHERE id=?",
       [productId]
     );
     const total_amount = quantity * data[0].price;
 
-    const response = await db.query(
-      "INSERT INTO orders(user_id, quantity, total_amount, product_id, seller_id) VALUES (?,?,?,?,?)",
-      [userId, quantity, total_amount, productId, data[0].seller_id]
-    );
-    res.status(201).send({
-      message: "Order placed successfully.",
-    });
+    await db
+      .query(
+        "INSERT INTO orders(user_id, quantity, total_amount, product_id, seller_id) VALUES (?,?,?,?,?)",
+        [userId, quantity, total_amount, productId, data[0].seller_id]
+      )
+      .then(async () => {
+        // update quantity in products
+        const left_quantity = data[0].quantity - quantity;
+        left_quantity < 0 ? 0 : left_quantity;
+
+        await db
+          .execute("UPDATE products SET quantity=? WHERE id=?", [
+            left_quantity,
+            productId,
+          ])
+          .then(() => {
+            return res.status(201).send({
+              message: "Order placed successfully.",
+            });
+          });
+      })
+      .catch(() => {
+        return res.status(400).send({ message: "Error in executing query." });
+      });
   } catch (error) {
     return res.status(500).send({
       message: "Cannot place order, please try again later.",
@@ -60,11 +77,11 @@ module.exports.postOrder = async (req, res) => {
 
 module.exports.getOrderById = async (req, res) => {
   try {
-    const orderId = req.params.id;
+    const { orderId } = req.body;
     const { id } = req.user;
 
     const query =
-      "SELECT orders.id, products.name as product_name, products.description, products.price, products.imageUrl, orders.quantity, orders.total_amount FROM ((orders INNER JOIN users ON orders.user_id = users.id) INNER JOIN products ON orders.product_id = products.id) WHERE orders.id=? AND orders.user_id=?";
+      "SELECT orders.id, products.name as product_name, products.description, products.price, products.imageUrl, products.quantity, orders.quantity, orders.total_amount FROM ((orders INNER JOIN users ON orders.user_id = users.id) INNER JOIN products ON orders.product_id = products.id) WHERE orders.id=? AND orders.user_id=?";
 
     const [data] = await db.query(query, [orderId, id]);
 
@@ -86,15 +103,29 @@ module.exports.getOrderById = async (req, res) => {
 
 module.exports.deleteOrderById = async (req, res) => {
   try {
-    const orderId = req.params.id;
+    const { orderId } = req.body;
     const userId = req.user.id;
+
+    //first get quantity from orders
+    const [data] = await db.execute(
+      "SELECT quantity, product_id FROM orders WHERE id=? AND user_id=?",
+      [orderId, userId]
+    );
 
     await db
       .execute("DELETE FROM orders WHERE id=? AND user_id=?", [orderId, userId])
-      .then(() => {
-        return res.status(200).send({
-          message: "Order deleted successfully.",
-        });
+      .then(async () => {
+        // update quantity in products
+        await db
+          .execute("UPDATE products SET quantity=? WHERE id=?", [
+            data[0].quantity,
+            data[0].product_id,
+          ])
+          .then(() => {
+            return res.status(200).send({
+              message: "Order deleted successfully.",
+            });
+          });
       });
   } catch (error) {
     return res.status(500).json({

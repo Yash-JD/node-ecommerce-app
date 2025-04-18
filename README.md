@@ -7,6 +7,7 @@ This is a simple Node.js application for an e-commerce platform built using Expr
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Running the App](#running-the-app)
+- [Endpoints](#All-endpoints)
 
 ## Installation
 
@@ -57,3 +58,5 @@ To run the application locally, follow these steps:
 ```bash
 npm run start
 ```
+
+## All Endpoints
