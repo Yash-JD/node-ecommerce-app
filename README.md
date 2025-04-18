@@ -39,11 +39,15 @@ In the `.env` file, you will need to define the following environment variables:
 ### Example `.env.example`:
 
 ```env
-MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASS=yourpassword
-MYSQL_DATABASE=ecommerce_db
+MYSQL_HOST=
+MYSQL_USER=
+MYSQL_PASS=
+MYSQL_DATABASE=
 PORT=3000
+JWT_SECRET_KEY=
+CLOUDINARY_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
 
 ## Running the App
@@ -51,5 +55,5 @@ PORT=3000
 To run the application locally, follow these steps:
 
 ```bash
-npm start
+npm run start
 ```

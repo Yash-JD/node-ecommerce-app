@@ -1,6 +1,12 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const {
+  validateEmail,
+  validatePassword,
+  generateOTP,
+  verifyToken,
+} = require("../utils/helpers");
 
 module.exports.signup = async (req, res) => {
   try {
@@ -10,6 +16,15 @@ module.exports.signup = async (req, res) => {
     if (!username || !password || !email || !role) {
       return res.status(400).json({
         message: "invalid syntax",
+      });
+    }
+
+    // validate email
+    const validEmail = validateEmail(email);
+    if (!validEmail) {
+      return res.status(400).json({
+        message:
+          "Email must contain all lowercase, no number domain and no special symbols.",
       });
     }
 
@@ -23,18 +38,43 @@ module.exports.signup = async (req, res) => {
         msg: "User already exists.",
       });
 
-    // insert into database
+    //validate password
+    const validPassword = validatePassword(password);
+    if (!validPassword) {
+      return res.status(400).json({
+        message:
+          "Password must contain atleat 8 characters with atleast one Uppercase, one lowercase, one number and one special character.",
+      });
+    }
+    // hash the password
     const hashPass = await bcrypt.hash(password, 10);
 
-    const query =
-      "INSERT INTO users(name, email, password, role) VALUES (?,?,?,?)";
-    const data = [username, email, hashPass, role];
-    const result = await db.execute(query, data);
-    return res.status(201).json({
-      msg: `${user[0].name} created successfullly.`,
-    });
+    // generate otp
+    const response = await generateOTP(email);
+    if (response) {
+      // make token of otp, email, hashPass
+      const payload = {
+        otp: response,
+        username,
+        email,
+        hashPass,
+        role,
+      };
+      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+        expiresIn: "1m",
+      });
+      // then send token with cookie as response
+      res
+        .cookie("signupOTP", token, { maxAge: 60000 })
+        .status(200)
+        .json({ msg: "OTP sent successfully." });
+    } else {
+      return res.status(500).json({
+        message: "error in sending otp",
+      });
+    }
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return res.status(500).json({
       message: "You cannot be registered, please try again later",
     });
@@ -46,7 +86,7 @@ module.exports.login = async (req, res) => {
     const { email, password, role } = req.body;
 
     // check if data is valid
-    if (!password || !email || !role) {
+    if (!email || !password || !role) {
       return res.status(400).json({
         message: "Field cannot be empty.",
       });
@@ -68,16 +108,15 @@ module.exports.login = async (req, res) => {
           role: user[0].role,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "1h",
+          expiresIn: "3h",
         });
         // then send token with cookie as response
         res
           .cookie("uid", token)
           .status(200)
           .json({ msg: "Logged in successfully." });
-        // const cookie = res.cookie("uid", token).render("home.ejs", cookie);
       } else {
-        return res.status(401).json({
+        return res.status(403).json({
           msg: "Please enter correct password.",
         });
       }
@@ -94,8 +133,39 @@ module.exports.login = async (req, res) => {
   }
 };
 
-module.exports.logout = async (req, res) => {
+module.exports.logout = (req, res) => {
   res.clearCookie("uid", { path: "/" });
-  res.status(200).json({ message: "Logged out successfully" });
+  return res.status(200).json({ message: "Logged out successfully" });
   // console.log(req.cookies?.uid);
+};
+
+module.exports.verifyOTP = async (req, res) => {
+  try {
+    const userOTP = parseInt(req.body.otp);
+
+    // verify token if it is unchanged ?
+    const { otp, username, email, hashPass, role } = verifyToken(
+      req.cookies?.signupOTP
+    );
+
+    // verify otp of frontend and original otp (generate from signup & is in cookie)
+    if (userOTP === otp) {
+      // insert into database
+      const query =
+        "INSERT INTO users(name, email, password, role) VALUES (?,?,?,?)";
+      const data = [username, email, hashPass, role];
+      await db.execute(query, data).then(() => res.clearCookie("signupOTP"));
+      return res.status(201).json({
+        msg: `Signed Up successfully!`,
+      });
+    } else {
+      return res.status(400).json({
+        msg: `Wrong OTP`,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Cannot verify otp, please try again later",
+    });
+  }
 };
