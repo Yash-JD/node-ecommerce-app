@@ -21,7 +21,7 @@ module.exports.validateEmail = (email) => {
   //check if email contains any other special characters other than @ and .
   if (
     email.split("").some((x) => {
-      return '!#$%^&*(),?":{}|<>@.'.includes(x);
+      return '!#$%^&*(),?":{}|<>'.includes(x);
     })
   )
     return false;
