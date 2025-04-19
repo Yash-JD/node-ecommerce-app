@@ -85,9 +85,10 @@ module.exports.addProduct = async (req, res) => {
       quantity,
     ];
 
-    await db.execute(query, data);
-    return res.status(201).send({
-      message: "Product added successfully",
+    await db.execute(query, data).then(() => {
+      return res.status(201).send({
+        message: "Product added successfully",
+      });
     });
   } catch (error) {
     // console.error(error);
@@ -154,10 +155,14 @@ module.exports.updateProduct = async (req, res) => {
 
     // console.log({ query });
 
-    await db.execute(query, data);
-    return res.status(200).json({
-      message: "Data updated successfully.",
-    });
+    await db
+      .execute(query, data)
+      .then(() => {
+        return res.status(200).json({
+          message: "Data updated successfully.",
+        });
+      })
+      .catch((err) => res.status(400).send({ msg: err }));
   } catch (error) {
     return res.status(500).json({
       message: "Cannot update product, please try again later",
@@ -174,7 +179,8 @@ module.exports.deleteProduct = async (req, res) => {
         return res.status(200).send({
           message: "Product deleted successfully.",
         });
-      });
+      })
+      .catch((err) => res.status(400).send({ msg: err }));
   } catch (error) {
     return res.status(500).json({
       message: "Cannot delete product, please try again later",

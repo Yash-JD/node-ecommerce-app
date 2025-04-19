@@ -66,7 +66,9 @@ module.exports.postOrder = async (req, res) => {
           });
       })
       .catch(() => {
-        return res.status(400).send({ message: "Error in executing query." });
+        return res
+          .status(400)
+          .send({ message: "Error in executing postOrder query." });
       });
   } catch (error) {
     return res.status(500).send({
@@ -125,7 +127,8 @@ module.exports.deleteOrderById = async (req, res) => {
             return res.status(200).send({
               message: "Order deleted successfully.",
             });
-          });
+          })
+          .catch((err) => res.status(400).send({ msg: err }));
       });
   } catch (error) {
     return res.status(500).json({
