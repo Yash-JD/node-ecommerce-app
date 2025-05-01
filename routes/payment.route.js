@@ -1,18 +1,27 @@
 const express = require("express");
-const { checkAuth, checkUserRole } = require("../middlewares/auth.middleware");
+const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 const {
   addAddress,
   editAddress,
   deleteAddress,
+} = require("../controllers/address.controller");
+const {
+  checkPaymentStatus,
+  makePayment,
 } = require("../controllers/payment.controller");
 const router = express.Router();
 
-router.route("/address").post(checkAuth, checkUserRole, addAddress);
+// address route
+router.route("/address").post(checkAuth, isUser, addAddress);
 router
   .route("/address/:id")
-  .patch(checkAuth, checkUserRole, editAddress)
-  .delete(checkAuth, checkUserRole, deleteAddress);
+  .patch(checkAuth, isUser, editAddress)
+  .delete(checkAuth, isUser, deleteAddress);
 
-// router.route("/payment").get(checkPaymentStatus).post(makePayment);
+// payment route
+router
+  .route("/payment")
+  .get(checkPaymentStatus)
+  .post(checkAuth, isUser, makePayment);
 
 module.exports = router;

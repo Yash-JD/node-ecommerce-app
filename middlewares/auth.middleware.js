@@ -26,7 +26,7 @@ module.exports.checkAuth = (req, res, next) => {
   }
 };
 
-module.exports.checkUserRole = (req, res, next) => {
+module.exports.isUser = (req, res, next) => {
   const { role } = req.user;
   if (role === "user") next();
   else
@@ -35,7 +35,7 @@ module.exports.checkUserRole = (req, res, next) => {
     });
 };
 
-module.exports.checkSellerRole = (req, res, next) => {
+module.exports.isSeller = (req, res, next) => {
   const { role } = req.user;
   if (role === "seller") next();
   else
