@@ -1,5 +1,5 @@
 const express = require("express");
-const { checkAuth, checkUserRole } = require("../middlewares/auth.middleware");
+const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 const {
   getAllWishlist,
   addToWishlist,
@@ -9,8 +9,8 @@ const router = express.Router();
 
 router
   .route("/")
-  .get(checkAuth, checkUserRole, getAllWishlist)
-  .post(checkAuth, checkUserRole, addToWishlist);
-router.delete("/:id", checkAuth, checkUserRole, deleteWishlistById);
+  .get(checkAuth, isUser, getAllWishlist)
+  .post(checkAuth, isUser, addToWishlist);
+router.delete("/:id", checkAuth, isUser, deleteWishlistById);
 
 module.exports = router;

@@ -5,17 +5,17 @@ const {
   deleteOrderById,
   getOrderById,
 } = require("../controllers/orders.controller");
-const { checkAuth, checkUserRole } = require("../middlewares/auth.middleware");
+const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 const router = express.Router();
 
 router
   .route("/")
   .get(checkAuth, getAllOrders)
-  .post(checkAuth, checkUserRole, postOrder);
+  .post(checkAuth, isUser, postOrder);
 
 router
   .route("/:id")
-  .get(checkAuth, checkUserRole, getOrderById)
-  .delete(checkAuth, checkUserRole, deleteOrderById);
+  .get(checkAuth, isUser, getOrderById)
+  .delete(checkAuth, isUser, deleteOrderById);
 
 module.exports = router;
