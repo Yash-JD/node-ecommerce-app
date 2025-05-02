@@ -44,8 +44,9 @@ module.exports.validatePassword = (password) => {
   else return false;
 };
 
-module.exports.generateOTP = async (sender_mail) => {
+module.exports.generateOTP = async (receiver_mail) => {
   try {
+    // sender details
     const sender = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -53,12 +54,26 @@ module.exports.generateOTP = async (sender_mail) => {
         pass: process.env.GMAIL_SENDER_PASS,
       },
     });
+
+    // verify mail
+    sender.verify(function (error, success) {
+      if (error) {
+        console.log("Error verifying Gmail:", error);
+        return false;
+      } else {
+        console.log("Server is ready to send emails");
+      }
+    });
+
+    // generate otp
     const otp = Math.floor(Math.random() * 999999 + 100000);
+
+    // sending mail
     const receiver = {
       from: process.env.GMAIL_SENDER_ID,
-      to: sender_mail,
-      subject: "Verification OTP",
-      text: `${otp}`,
+      to: receiver_mail,
+      subject: "OTP Verification",
+      text: `Your otp for gmail verification is ${otp}`,
     };
     const info = await sender.sendMail(receiver);
     // console.log("Email sent:", info.response);

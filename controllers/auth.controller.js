@@ -70,7 +70,7 @@ module.exports.signup = async (req, res) => {
         .json({ msg: "OTP sent successfully." });
     } else {
       return res.status(500).json({
-        message: "error in sending otp",
+        message: "Invalid gmail",
       });
     }
   } catch (error) {
