@@ -108,7 +108,7 @@ module.exports.login = async (req, res) => {
           role: user[0].role,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "3h",
+          expiresIn: "1d",
         });
         // then send token with cookie as response
         res
