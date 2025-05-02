@@ -6,7 +6,6 @@ const productsRoute = require("./routes/products.route");
 const ordersRoute = require("./routes/orders.route");
 const wishlistRoute = require("./routes/wishlist.route");
 const cartRoute = require("./routes/cart.route");
-const paymentRoute = require("./routes/payment.route");
 
 const app = express();
 
@@ -21,7 +20,6 @@ app.use("/api/products", productsRoute);
 app.use("/api/orders", ordersRoute);
 app.use("/api/wishlist", wishlistRoute);
 app.use("/api/cart", cartRoute);
-app.use("/api/checkout", paymentRoute);
 
 // connection establishment
 const PORT = process.env.PORT || 3001;

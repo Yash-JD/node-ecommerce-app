@@ -1,5 +1,5 @@
 const express = require("express");
-const { checkAuth, checkUserRole } = require("../middlewares/auth.middleware");
+const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 const {
   getAllItems,
   addItem,
@@ -8,14 +8,11 @@ const {
 } = require("../controllers/cart.controller");
 const router = express.Router();
 
-router
-  .route("/")
-  .get(checkAuth, getAllItems)
-  .post(checkAuth, checkUserRole, addItem);
+router.route("/").get(checkAuth, getAllItems).post(checkAuth, isUser, addItem);
 
 router
   .route("/:id")
-  .patch(checkAuth, checkUserRole, updateItemQuantity)
-  .delete(checkAuth, checkUserRole, deleteItemById);
+  .patch(checkAuth, isUser, updateItemQuantity)
+  .delete(checkAuth, isUser, deleteItemById);
 
 module.exports = router;

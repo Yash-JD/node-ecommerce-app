@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary");
 const nodemailer = require("nodemailer");
+const db = require("../config/db");
 
 module.exports.verifyToken = (token) => {
   return jwt.verify(token, process.env.JWT_SECRET_KEY);
@@ -69,13 +70,46 @@ module.exports.generateOTP = async (sender_mail) => {
   }
 };
 
-module.exports.uploadFileToCloudinary = async (file, folder) => {
-  const options = {
-    folder: folder,
-    resource_type: "auto",
-  };
+// module.exports.uploadFileToCloudinary = async (file, folder) => {
+//   const options = {
+//     folder: folder,
+//     resource_type: "auto",
+//   };
 
-  // if (quality) options.quality = quality;
+//   // if (quality) options.quality = quality;
 
-  return await cloudinary.uploader.upload(file.path, options);
+//   return await cloudinary.uploader.upload(file.path, options);
+// };
+
+module.exports.fetchImages = async (products) => {
+  try {
+    let images = [];
+
+    // loop through each products and get corresponding images
+    for (const prd of products) {
+      const [urls] = await db.execute(
+        "SELECT image_urls FROM images WHERE product_id=?",
+        [prd.id]
+      );
+      images.push(urls);
+      // images.push({ ...urls });
+      // console.log(images);
+    }
+    return images;
+  } catch (error) {
+    return [];
+  }
+};
+
+module.exports.mergeImagesWithProducts = (result, images) => {
+  let count = 0;
+  for (const product of result) {
+    const eachProductImages = [];
+    images[count].forEach((url) => {
+      eachProductImages.push(url);
+    });
+    count++;
+    product.imageUrls = eachProductImages;
+  }
+  return result;
 };

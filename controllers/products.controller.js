@@ -1,9 +1,9 @@
 const db = require("../config/db");
-const { uploadFileToCloudinary } = require("../utils/helpers");
+const { fetchImages, mergeImagesWithProducts } = require("../utils/helpers");
 
 module.exports.getAllProducts = async (req, res) => {
   try {
-    const category = req.query.category;
+    const { category } = req.query;
     const limit = parseInt(req.query.limit) || 10;
 
     // if query parameters are there
@@ -12,31 +12,48 @@ module.exports.getAllProducts = async (req, res) => {
       let query = "";
       let result;
 
-      // different =? & (?)
+      // different '=? & (?)'
       if (categories.length === 1) {
         query +=
-          "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category = ? LIMIT ?";
+          "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category = ? LIMIT ?";
         [result] = await db.query(query, [...categories, limit]);
       } else {
         query +=
-          "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category IN (?) LIMIT ?";
+          "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category FROM products INNER JOIN category ON products.category_id = category.id WHERE category.category IN (?) LIMIT ?";
         [result] = await db.query(query, [categories, limit]);
       }
 
       if (result.length > 0) {
-        res.status(200).send({
-          products: result,
+        const images = await fetchImages(result); // if products exists then get all their images
+
+        // merge image-urls with result
+        const products = mergeImagesWithProducts(result, images);
+
+        return res.status(200).send({
+          products,
+          // images,
         });
       } else {
         res.status(404).send({ message: "No such product exists." });
       }
     } else {
       const [result] = await db.query(
-        "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id"
+        "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category FROM products INNER JOIN category ON products.category_id = category.id"
       );
-      res.send({
-        products: result,
-      });
+
+      if (result.length > 0) {
+        const images = await fetchImages(result); // if products exists then get all their images
+
+        // merge image-urls with result
+        const products = mergeImagesWithProducts(result, images);
+
+        return res.status(200).send({
+          products,
+          // images,
+        });
+      } else {
+        res.status(404).send({ message: "No such product exists." });
+      }
     }
   } catch (error) {
     return res.status(500).json({
@@ -49,12 +66,28 @@ module.exports.addProduct = async (req, res) => {
   try {
     const { name, description, price, category, quantity } = req.body;
     const user_id = req.user.id;
-    const image = req.file;
 
-    if (!name || !description || !price || !category || !image || !quantity) {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No images uploaded" });
+    }
+
+    if (!name || !description || !price || !category || !quantity) {
       return res.status(204).json({
         message: "fields cannot be empty",
       });
+    }
+
+    const imagesUrls = req.files.map((file) => file.path); // already Cloudinary URLs
+    // console.log(imagesUrls);
+
+    // check if product already exists
+    const [isProductExists] = await db.execute(
+      "SELECT id FROM products WHERE name=? AND description=? AND price=? AND seller_id=?",
+      [name, description, price, user_id]
+    );
+
+    if (isProductExists.length > 0) {
+      return res.status(208).send({ message: "Product already exists." });
     }
 
     // insert into category table
@@ -63,32 +96,23 @@ module.exports.addProduct = async (req, res) => {
       [category]
     );
 
-    // upload image to cloudinary
-    const imageUrl = await uploadFileToCloudinary(image, "e-commerce");
-    // console.log(imageUrl.secure_url);
-    if (!imageUrl) {
-      return res.status(400).json({
-        message: "Failed to upload image to Cloudinary",
-      });
+    // insert details into products table
+    const [response] = await db.execute(
+      "INSERT INTO products(name, description, price, category_id, seller_id, quantity) VALUES ( ?, ?, ?, ?, ?, ?)",
+      [name, description, price, categoryData.insertId, user_id, quantity]
+    );
+
+    // then insert images corresponds to productId recently inserted
+    const productId = response.insertId;
+    for (const img of imagesUrls) {
+      await db.execute(
+        "INSERT INTO images(product_id, image_urls) VALUES (?,?)",
+        [productId, img]
+      );
     }
 
-    // insert into products table
-    const query =
-      "INSERT INTO products(name, description, price, category_id, imageUrl, seller_id, quantity) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    const data = [
-      name,
-      description,
-      price,
-      categoryData.insertId,
-      imageUrl.secure_url,
-      user_id,
-      quantity,
-    ];
-
-    await db.execute(query, data).then(() => {
-      return res.status(201).send({
-        message: "Product added successfully",
-      });
+    return res.status(201).send({
+      message: "Product added successfully",
     });
   } catch (error) {
     // console.error(error);
@@ -103,12 +127,17 @@ module.exports.getProductById = async (req, res) => {
     const { id } = req.params;
 
     const [product] = await db.execute(
-      "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category, products.imageUrl FROM products INNER JOIN category ON products.category_id = category.id HAVING id=?",
+      "SELECT products.id, products.name, products.description, products.price, products.quantity, category.category FROM products INNER JOIN category ON products.category_id = category.id HAVING id=?",
       [id]
     );
     if (product.length > 0) {
+      const images = await fetchImages(product); // if products exists then get all their images
+
+      // merge image-urls with result
+      const details = mergeImagesWithProducts(product, images);
+
       return res.status(200).send({
-        data: product,
+        product: details,
       });
     } else {
       return res.status(400).json({
@@ -124,27 +153,27 @@ module.exports.getProductById = async (req, res) => {
 
 module.exports.updateProduct = async (req, res) => {
   try {
+    // check if there is image to be updated ?
+    // const image = req.files;
+    // if (image) {
+    //   // // upload image to cloudinary
+    //   // const imageUrl = await uploadFileToCloudinary(image, "e-commerce");
+    //   // console.log(imageUrl.secure_url);
+    //   // if (!imageUrl) {
+    //   //   return res.status(400).json({
+    //   //     message: "Failed to upload image to Cloudinary",
+    //   //   });
+    //   // }
+    //   // query += "imageUrl=?  ";
+    //   // data.push(imageUrl.secure_url);
+    // }
+
     // create query and data to be updated
     let query = `UPDATE products SET `;
     let data = [];
     for (let i in req.body) {
       query += i + "=?, ";
       data.push(req.body[i]);
-    }
-
-    // check if there is image to be updated ?
-    const image = req.file;
-    if (image) {
-      // upload image to cloudinary
-      const imageUrl = await uploadFileToCloudinary(image, "e-commerce");
-      // console.log(imageUrl.secure_url);
-      if (!imageUrl) {
-        return res.status(400).json({
-          message: "Failed to upload image to Cloudinary",
-        });
-      }
-      query += "imageUrl=?  ";
-      data.push(imageUrl.secure_url);
     }
 
     // remove extra comma & space
@@ -173,12 +202,18 @@ module.exports.updateProduct = async (req, res) => {
 module.exports.deleteProduct = async (req, res) => {
   try {
     const productId = req.params.id;
+
+    // first delete all details and then images
     await db
-      .execute("DELETE FROM products WHERE id = ?", [productId])
-      .then(() => {
-        return res.status(200).send({
-          message: "Product deleted successfully.",
-        });
+      .execute("DELETE FROM images WHERE product_id = ?", [productId])
+      .then(async () => {
+        await db
+          .execute("DELETE FROM products WHERE id=?", [productId])
+          .then(() => {
+            return res.status(200).send({
+              message: "Product deleted successfully.",
+            });
+          });
       })
       .catch((err) => res.status(400).send({ msg: err }));
   } catch (error) {
