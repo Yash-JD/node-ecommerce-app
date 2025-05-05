@@ -1,15 +1,16 @@
 const express = require("express");
+const router = express.Router();
+
 const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 
 const {
-  checkPaymentStatus,
   makePayment,
+  renderProductPage,
+  addPaymentToDB,
 } = require("../controllers/payment.controller");
-const router = express.Router();
 
-router
-  .route("/payment")
-  .get(checkPaymentStatus)
-  .post(checkAuth, isUser, makePayment);
+router.get("/", renderProductPage);
+router.post("/createOrder", makePayment);
+// router.post("/paymentSuccess", addPaymentToDB);
 
 module.exports = router;

@@ -8,10 +8,8 @@ const {
 const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 const router = express.Router();
 
-router
-  .route("/")
-  .get(checkAuth, getAllOrders)
-  .post(checkAuth, isUser, postOrder);
+router.route("/").get(checkAuth, getAllOrders);
+// .post(checkAuth, isUser, postOrder);
 
 router
   .route("/:id")

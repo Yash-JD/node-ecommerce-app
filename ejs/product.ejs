@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Buy Product</title>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+	<h1>Buy Shirt - ₹500</h1>
+	<form id="payment-form">
+		<input type="hidden" name="name" value="Shirt">
+		<input type="hidden" name="amount" value="500">
+		<input type="hidden" name="description" value="Shirt Purchase">
+		<button type="submit">Pay Now</button>
+	</form>
+
+	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+	<script>
+		$("#payment-form").submit(function (e) {
+			e.preventDefault();
+
+			const data = $(this).serialize();
+
+			$.post("/api/checkout/payment/createOrder", data, function (res) {
+				if (res.success) {
+					const options = {
+						key: res.key_id,
+						amount: res.amount,
+						currency: "INR",
+						name: res.product_name,
+						description: res.description,
+						order_id: res.order_id,
+						handler: function (response) {
+							$.post("/api/checkout/payment/paymentSuccess", {
+								payment_id: response.razorpay_payment_id,
+								order_id: response.razorpay_order_id,
+								db_order_id: res.db_order_id
+							}, function (serverRes) {
+								alert(serverRes.message || "Payment recorded!");
+							})
+						},
+						prefill: {
+							name: res.name,
+							email: res.email,
+							contact: res.contact
+						},
+						theme: { color: "#3399cc" }
+					};
+
+					const razorpay = new Razorpay(options);
+					razorpay.open();
+				} else {
+					alert("Failed to create order");
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

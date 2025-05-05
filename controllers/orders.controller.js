@@ -38,20 +38,20 @@ module.exports.postOrder = async (req, res) => {
     const { productId, quantity } = req.body;
     const userId = req.user.id;
 
-    const [data] = await db.query(
+    const [product] = await db.query(
       "SELECT price, seller_id, quantity FROM products WHERE id=?",
       [productId]
     );
-    const total_amount = quantity * data[0].price;
+    const total_amount = quantity * product[0].price;
 
     await db
       .query(
         "INSERT INTO orders(user_id, quantity, total_amount, product_id, seller_id) VALUES (?,?,?,?,?)",
-        [userId, quantity, total_amount, productId, data[0].seller_id]
+        [userId, quantity, total_amount, productId, product[0].seller_id]
       )
       .then(async () => {
         // update quantity in products
-        const left_quantity = data[0].quantity - quantity;
+        const left_quantity = product[0].quantity - quantity;
         left_quantity < 0 ? 0 : left_quantity;
 
         await db

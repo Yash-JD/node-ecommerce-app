@@ -10,11 +10,19 @@ const addressRoute = require("./routes/address.route");
 const paymentRoute = require("./routes/payment.route");
 
 const app = express();
+const cors = require("cors");
 
 // express middleware parsers
 app.use(express.json()); // Parses incoming JSON requests
 app.use(express.urlencoded({ extended: false })); // Parses URL-encoded form data
 app.use(cookieParser()); // Parses the cookies
+
+// for payment gateway
+const path = require("path");
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "./ejs"));
+
+app.use(cors());
 
 // all endpoints
 app.use("/api/auth", authRoute);
