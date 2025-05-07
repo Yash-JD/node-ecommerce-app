@@ -70,7 +70,7 @@ module.exports.signup = async (req, res) => {
 
       // send token as response
       return res.status(200).json({
-        success: false,
+        success: true,
         message: "OTP sent successfully.",
         otpToken: token,
       });
@@ -167,7 +167,7 @@ module.exports.login = async (req, res) => {
 };
 
 module.exports.logout = (req, res) => {
-  res.clearCookie("uid", { path: "/" });
+  // res.clearCookie("uid", { path: "/" });
   return res
     .status(200)
     .json({ success: true, message: "Logged out successfully" });
