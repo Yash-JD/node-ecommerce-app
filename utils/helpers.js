@@ -56,17 +56,15 @@ module.exports.generateOTP = async (receiver_mail) => {
     });
 
     // verify mail
-    sender.verify(function (error, success) {
-      if (error) {
-        console.log("Error verifying Gmail:", error);
-        return false;
-      } else {
-        console.log("Server is ready to send emails");
-      }
-    });
+    // sender.verify(function (error, success) {
+    //   if (error) {
+    //     console.log("Error verifying Gmail:", error);
+    //     return false;
+    //   }
+    // });
 
     // generate otp
-    const otp = Math.floor(Math.random() * 999999 + 100000);
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
     // sending mail
     const receiver = {

@@ -7,7 +7,7 @@ module.exports.checkAuth = (req, res, next) => {
   // check if cookies with token exists
   if (!userUid)
     return res.status(401).json({
-      msg: "Unauthorised! Please login first.",
+      message: "Unauthorised! Please login first.",
     });
 
   try {
@@ -21,7 +21,7 @@ module.exports.checkAuth = (req, res, next) => {
     next();
   } catch (error) {
     return res.status(500).json({
-      msg: "Something went wrong.",
+      message: "Something went wrong.",
     });
   }
 };
@@ -31,7 +31,7 @@ module.exports.isUser = (req, res, next) => {
   if (role === "user") next();
   else
     return res.status(403).json({
-      msg: "Unauthorised!, only accessed by user.",
+      message: "Unauthorised!, only accessed by user.",
     });
 };
 
@@ -40,7 +40,7 @@ module.exports.isSeller = (req, res, next) => {
   if (role === "seller") next();
   else
     return res.status(403).json({
-      msg: "Unauthorised!, only accessed by seller.",
+      message: "Unauthorised!, only accessed by seller.",
     });
 };
 

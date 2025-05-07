@@ -13,7 +13,7 @@ module.exports.addAddress = async (req, res) => {
       .then(() => {
         return res.status(201).send({ message: "Address added successfully" });
       })
-      .catch((err) => res.status(400).send({ msg: err }));
+      .catch((err) => res.status(400).send({ message: err }));
   } catch (error) {
     return res.status(500).send({
       message: "Unable to save address. Please try again later.",

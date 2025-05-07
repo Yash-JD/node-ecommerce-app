@@ -191,7 +191,7 @@ module.exports.updateProduct = async (req, res) => {
           message: "Data updated successfully.",
         });
       })
-      .catch((err) => res.status(400).send({ msg: err }));
+      .catch((err) => res.status(400).send({ message: err }));
   } catch (error) {
     return res.status(500).json({
       message: "Cannot update product, please try again later",
@@ -215,7 +215,7 @@ module.exports.deleteProduct = async (req, res) => {
             });
           });
       })
-      .catch((err) => res.status(400).send({ msg: err }));
+      .catch((err) => res.status(400).send({ message: err }));
   } catch (error) {
     return res.status(500).json({
       message: "Cannot delete product, please try again later",

@@ -15,6 +15,7 @@ module.exports.signup = async (req, res) => {
     // check if data is valid
     if (!username || !password || !email || !role) {
       return res.status(400).json({
+        success: false,
         message: "invalid syntax",
       });
     }
@@ -23,6 +24,7 @@ module.exports.signup = async (req, res) => {
     const validEmail = validateEmail(email);
     if (!validEmail) {
       return res.status(400).json({
+        success: false,
         message:
           "Email must contain all lowercase, no number domain and no special symbols.",
       });
@@ -35,13 +37,15 @@ module.exports.signup = async (req, res) => {
     );
     if (existingUser.length > 0)
       return res.status(400).json({
-        msg: "User already exists.",
+        success: false,
+        message: "User already exists.",
       });
 
     //validate password
     const validPassword = validatePassword(password);
     if (!validPassword) {
       return res.status(400).json({
+        success: false,
         message:
           "Password must contain atleat 8 characters with atleast one Uppercase, one lowercase, one number and one special character.",
       });
@@ -61,21 +65,31 @@ module.exports.signup = async (req, res) => {
         role,
       };
       const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: "1m",
+        expiresIn: "2m",
       });
-      // then send token with cookie as response
-      res
-        .cookie("signupOTP", token, { maxAge: 60000 })
-        .status(200)
-        .json({ msg: "OTP sent successfully." });
+
+      // send token as response
+      return res.status(200).json({
+        success: false,
+        message: "OTP sent successfully.",
+        otpToken: token,
+      });
+
+      // //  send token with cookie as response
+      // res
+      //   .cookie("signupOTP", token, { maxAge: 60000 })
+      //   .status(200)
+      //   .json({ success: false, message: "OTP sent successfully." });
     } else {
       return res.status(500).json({
+        success: false,
         message: "Invalid gmail",
       });
     }
   } catch (error) {
     // console.error(error);
     return res.status(500).json({
+      success: false,
       message: "You cannot be registered, please try again later",
     });
   }
@@ -88,7 +102,18 @@ module.exports.login = async (req, res) => {
     // check if data is valid
     if (!email || !password || !role) {
       return res.status(400).json({
+        success: false,
         message: "Field cannot be empty.",
+      });
+    }
+
+    // validate email
+    const validEmail = validateEmail(email);
+    if (!validEmail) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Email must contain all lowercase, no number domain and no special symbols.",
       });
     }
 
@@ -110,24 +135,32 @@ module.exports.login = async (req, res) => {
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
           expiresIn: "1d",
         });
-        // then send token with cookie as response
-        res
-          .cookie("uid", token)
-          .status(200)
-          .json({ msg: "Logged in successfully." });
+        return res.status(200).json({
+          success: true,
+          message: "Logged in successfully.",
+          userData: token,
+        });
+        // // then send token with cookie as response
+        // res
+        //   .cookie("uid", token)
+        //   .status(200)
+        //   .json({ message: "Logged in successfully." });
       } else {
         return res.status(403).json({
-          msg: "Please enter correct password.",
+          success: false,
+          message: "Please enter correct password.",
         });
       }
     } else {
       return res.status(401).json({
-        msg: "Unauthorised! Please signup first.",
+        success: false,
+        message: "Unauthorised! Please signup first.",
       });
     }
   } catch (error) {
     console.error(error);
     return res.status(500).json({
+      success: false,
       message: "You cannot login now, please try again later",
     });
   }
@@ -135,7 +168,9 @@ module.exports.login = async (req, res) => {
 
 module.exports.logout = (req, res) => {
   res.clearCookie("uid", { path: "/" });
-  return res.status(200).json({ message: "Logged out successfully" });
+  return res
+    .status(200)
+    .json({ success: true, message: "Logged out successfully" });
   // console.log(req.cookies?.uid);
 };
 
@@ -145,7 +180,7 @@ module.exports.verifyOTP = async (req, res) => {
 
     // verify token if it is unchanged ?
     const { otp, username, email, hashPass, role } = verifyToken(
-      req.cookies?.signupOTP
+      req.body.serverOTPToken
     );
 
     // verify otp of frontend and original otp (generate from signup & is in cookie)
@@ -154,17 +189,20 @@ module.exports.verifyOTP = async (req, res) => {
       const query =
         "INSERT INTO users(name, email, password, role) VALUES (?,?,?,?)";
       const data = [username, email, hashPass, role];
-      await db.execute(query, data).then(() => res.clearCookie("signupOTP"));
+      await db.execute(query, data).then(() => (req.otpToken = {}));
       return res.status(201).json({
-        msg: `Signed Up successfully!`,
+        success: true,
+        message: `Signed Up successfully!`,
       });
     } else {
       return res.status(400).json({
-        msg: `Wrong OTP`,
+        success: false,
+        message: `Wrong OTP`,
       });
     }
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Cannot verify otp, please try again later",
     });
   }

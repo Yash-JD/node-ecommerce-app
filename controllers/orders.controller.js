@@ -128,7 +128,7 @@ module.exports.deleteOrderById = async (req, res) => {
               message: "Order deleted successfully.",
             });
           })
-          .catch((err) => res.status(400).send({ msg: err }));
+          .catch((err) => res.status(400).send({ message: err }));
       });
   } catch (error) {
     return res.status(500).json({
