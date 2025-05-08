@@ -30,11 +30,13 @@ module.exports.getAllProducts = async (req, res) => {
         const products = mergeImagesWithProducts(result, images);
 
         return res.status(200).send({
-          products,
-          // images,
+          success: true,
+          products: products,
         });
       } else {
-        res.status(404).send({ message: "No such product exists." });
+        res
+          .status(404)
+          .send({ success: false, message: "No such product exists." });
       }
     } else {
       const [result] = await db.query(
@@ -48,15 +50,18 @@ module.exports.getAllProducts = async (req, res) => {
         const products = mergeImagesWithProducts(result, images);
 
         return res.status(200).send({
-          products,
-          // images,
+          success: true,
+          products: products,
         });
       } else {
-        res.status(404).send({ message: "No such product exists." });
+        res
+          .status(404)
+          .send({ success: false, message: "No such product exists." });
       }
     }
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Cannot find product, please try again later",
     });
   }
@@ -68,11 +73,15 @@ module.exports.addProduct = async (req, res) => {
     const user_id = req.user.id;
 
     if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: "No images uploaded" });
+      return res.status(400).json({
+        success: false,
+        message: "No images uploaded",
+      });
     }
 
     if (!name || !description || !price || !category || !quantity) {
       return res.status(204).json({
+        success: false,
         message: "fields cannot be empty",
       });
     }
@@ -87,7 +96,10 @@ module.exports.addProduct = async (req, res) => {
     );
 
     if (isProductExists.length > 0) {
-      return res.status(208).send({ message: "Product already exists." });
+      return res.status(208).send({
+        success: false,
+        message: "Product already exists.",
+      });
     }
 
     // insert into category table
@@ -112,11 +124,13 @@ module.exports.addProduct = async (req, res) => {
     }
 
     return res.status(201).send({
+      success: true,
       message: "Product added successfully",
     });
   } catch (error) {
     // console.error(error);
     return res.status(500).json({
+      success: false,
       message: "Cannot add product, please try again later",
     });
   }
@@ -137,15 +151,18 @@ module.exports.getProductById = async (req, res) => {
       const details = mergeImagesWithProducts(product, images);
 
       return res.status(200).send({
+        success: true,
         product: details,
       });
     } else {
       return res.status(400).json({
+        success: false,
         message: "Such product doesnot exists",
       });
     }
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Cannot get product, please try again later",
     });
   }
@@ -188,12 +205,19 @@ module.exports.updateProduct = async (req, res) => {
       .execute(query, data)
       .then(() => {
         return res.status(200).json({
+          success: true,
           message: "Data updated successfully.",
         });
       })
-      .catch((err) => res.status(400).send({ message: err }));
+      .catch((err) =>
+        res.status(400).send({
+          success: false,
+          message: err,
+        })
+      );
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Cannot update product, please try again later",
     });
   }
@@ -211,13 +235,20 @@ module.exports.deleteProduct = async (req, res) => {
           .execute("DELETE FROM products WHERE id=?", [productId])
           .then(() => {
             return res.status(200).send({
+              success: true,
               message: "Product deleted successfully.",
             });
           });
       })
-      .catch((err) => res.status(400).send({ message: err }));
+      .catch((err) =>
+        res.status(400).send({
+          success: false,
+          message: err,
+        })
+      );
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Cannot delete product, please try again later",
     });
   }
