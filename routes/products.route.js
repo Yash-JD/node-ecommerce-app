@@ -33,4 +33,24 @@ router
     addProduct
   );
 
+// .get(getAllProducts)
+router
+  .route("/:id")
+  .get(getProductById)
+  .patch(
+    checkAuth,
+    isSeller,
+    checkSellerProducts,
+    (req, res, next) => {
+      upload(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        }
+        next(); // Proceed to updateProduct
+      });
+    },
+    updateProduct
+  )
+  .delete(checkAuth, isSeller, checkSellerProducts, deleteProduct);
+
 module.exports = router;
