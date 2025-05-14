@@ -4,7 +4,7 @@ const { fetchImages, mergeImagesWithProducts } = require("../utils/helpers");
 module.exports.getAllProducts = async (req, res) => {
   try {
     const { category } = req.query;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.quantity) || 10;
 
     // if query parameters are there
     if (category) {

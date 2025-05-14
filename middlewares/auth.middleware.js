@@ -2,16 +2,16 @@ const { verifyToken } = require("../utils/helpers");
 const db = require("../config/db");
 
 module.exports.checkAuth = (req, res, next) => {
-  const userUid = req.cookies?.uid;
+  const userUid = req.headers.authorization;
 
   // check if cookies with token exists
-  if (!userUid)
+  if (!userUid || !userUid.startsWith("Bearer "))
     return res.status(401).json({
       message: "Unauthorised! Please login first.",
     });
 
   try {
-    const verifyedUser = verifyToken(userUid);
+    const verifyedUser = verifyToken(userUid.split(" ")[1]);
     req.user = {
       id: verifyedUser.id,
       name: verifyedUser.name,
