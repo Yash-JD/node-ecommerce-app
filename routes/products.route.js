@@ -5,6 +5,7 @@ const {
   deleteProduct,
   addProduct,
   getProductById,
+  getAllCategories,
 } = require("../controllers/products.controller");
 
 const {
@@ -16,24 +17,23 @@ const {
 const router = express.Router();
 const upload = require("../config/multerStorage");
 
-router
-  .route("/")
-  .get(getAllProducts)
-  .post(
-    checkAuth,
-    isSeller,
-    (req, res, next) => {
-      upload(req, res, (err) => {
-        if (err) {
-          return res.status(400).json({ error: err.message });
-        }
-        next(); // Proceed to addProduct
-      });
-    },
-    addProduct
-  );
+router.get("/categories", checkAuth, isSeller, getAllCategories);
 
-// .get(getAllProducts)
+router.route("/").get(getAllProducts).post(
+  checkAuth,
+  isSeller,
+  // (req, res, next) => {
+  //   upload(req, res, (err) => {
+  //     if (err) {
+  //       return res.status(400).json({ error: err.message });
+  //     }
+  //     next(); // Proceed to addProduct
+  //   });
+  // },
+  upload,
+  addProduct
+);
+
 router
   .route("/:id")
   .get(getProductById)

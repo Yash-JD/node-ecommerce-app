@@ -253,3 +253,17 @@ module.exports.deleteProduct = async (req, res) => {
     });
   }
 };
+
+module.exports.getAllCategories = async (req, res) => {
+  try {
+    const [data] = await db.query("SELECT DISTINCT category FROM category", []);
+    if (data.length > 0) {
+      return res.status(200).send({ success: true, category: data });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Cannot find categories, please try again later",
+    });
+  }
+};

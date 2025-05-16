@@ -5,14 +5,19 @@ const {
   addItem,
   deleteItemById,
   updateItemQuantity,
+  getItemById,
 } = require("../controllers/cart.controller");
 const router = express.Router();
 
-router.route("/").get(checkAuth, getAllItems).post(checkAuth, isUser, addItem);
+router
+  .route("/")
+  .get(checkAuth, getAllItems)
+  .post(checkAuth, isUser, addItem)
+  .delete(checkAuth, isUser, deleteItemById);
 
 router
   .route("/:id")
-  .patch(checkAuth, isUser, updateItemQuantity)
-  .delete(checkAuth, isUser, deleteItemById);
+  .get(checkAuth, isUser, getItemById)
+  .patch(checkAuth, isUser, updateItemQuantity);
 
 module.exports = router;

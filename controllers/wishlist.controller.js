@@ -5,17 +5,16 @@ module.exports.getAllWishlist = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const [result] = await db
-      .execute(
-        "SELECT wishlist.id, products.id, products.name, products.description, products.price,products.quantity FROM wishlist INNER JOIN products ON wishlist.product_id = products.id WHERE wishlist.user_id=?",
-        [userId]
-      )
-      .catch((error) => {
-        return res.status(400).send({
-          success: false,
-          message: "Error in getAllWishlist query execution.",
-        });
-      });
+    const [result] = await db.execute(
+      "SELECT products.id, products.name, products.description, products.price,products.quantity FROM wishlist INNER JOIN products ON wishlist.product_id = products.id WHERE wishlist.user_id=?",
+      [userId]
+    );
+    // .catch((error) => {
+    //   return res.status(400).send({
+    //     success: false,
+    //     message: "Error in getAllWishlist query execution.",
+    //   });
+    // });
 
     if (result.length > 0) {
       const images = await fetchImages(result); // if products in wishlist exists then get all their images
@@ -28,9 +27,7 @@ module.exports.getAllWishlist = async (req, res) => {
         wishlist: result,
       });
     } else {
-      res
-        .status(404)
-        .send({ success: false, message: "No such product exists." });
+      res.send({ success: false, message: "No product exists." });
     }
   } catch (error) {
     return res.status(500).send({
@@ -123,7 +120,7 @@ module.exports.findInWishlistByProductId = async (req, res) => {
     if (data.length > 0)
       return res.status(200).send({ success: true, product: data });
     else {
-      return res.status(404).send({
+      return res.send({
         success: false,
         message: "Product not found in wishlist",
       });
