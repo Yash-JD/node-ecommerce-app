@@ -1,4 +1,6 @@
 const express = require("express");
+const router = express.Router();
+
 const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 const {
   getAllItems,
@@ -7,7 +9,6 @@ const {
   updateItemQuantity,
   getItemById,
 } = require("../controllers/cart.controller");
-const router = express.Router();
 
 router
   .route("/")
