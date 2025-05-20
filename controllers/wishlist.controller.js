@@ -9,12 +9,6 @@ module.exports.getAllWishlist = async (req, res) => {
       "SELECT products.id, products.name, products.description, products.price,products.quantity FROM wishlist INNER JOIN products ON wishlist.product_id = products.id WHERE wishlist.user_id=?",
       [userId]
     );
-    // .catch((error) => {
-    //   return res.status(400).send({
-    //     success: false,
-    //     message: "Error in getAllWishlist query execution.",
-    //   });
-    // });
 
     if (result.length > 0) {
       const images = await fetchImages(result); // if products in wishlist exists then get all their images

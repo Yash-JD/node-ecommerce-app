@@ -4,6 +4,7 @@ const {
   postOrder,
   deleteOrderById,
   getOrderById,
+  updateBIllingAddress,
 } = require("../controllers/orders.controller");
 const { checkAuth, isUser } = require("../middlewares/auth.middleware");
 const router = express.Router();
@@ -16,6 +17,7 @@ router
 router
   .route("/:id")
   .get(checkAuth, isUser, getOrderById)
+  .patch(checkAuth, isUser, updateBIllingAddress)
   .delete(checkAuth, isUser, deleteOrderById);
 
 module.exports = router;

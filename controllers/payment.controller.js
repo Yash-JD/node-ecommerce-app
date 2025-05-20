@@ -1,13 +1,15 @@
 const razorpayInstance = require("../config/razorpay");
 const db = require("../config/db");
 
-module.exports.renderProductPage = (req, res) => {
-  res.render("product");
-};
+// module.exports.renderProductPage = (req, res) => {
+//   res.render("product");
+// };
 
 module.exports.makePayment = async (req, res) => {
   try {
+    const { userName } = req.body;
     const amount = req.body.amount * 100;
+    const { email } = req.user;
     const options = {
       amount: amount,
       currency: "INR",
@@ -20,14 +22,10 @@ module.exports.makePayment = async (req, res) => {
           success: true,
           msg: "Order Created",
           order_id: order.id,
-          // db_order_id: order_db.inserId,
           amount: amount,
           key_id: process.env.RAZORPAY_KEY,
-          product_name: req.body.name,
-          description: req.body.description,
-          contact: "8567345632",
-          name: "Meet Bajaj",
-          email: "meet@gmail.com",
+          name: userName,
+          email: email,
         });
       } else {
         console.log(err);
@@ -50,12 +48,19 @@ module.exports.addPaymentToDB = async (req, res) => {
 
   try {
     // Store these values in DB
-    await db
-      .execute(
-        "INSERT INTO payments (order_id, razorpay_payment_id, razorpay_order_id) VALUES (?, ?, ?)",
-        [db_order_id, payment_id, order_id]
-      )
-      .then();
+    await db.execute(
+      "INSERT INTO payment(order_id, razorpay_payment_id, razorpay_order_id) VALUES (?, ?, ?)",
+      [db_order_id, payment_id, order_id]
+    );
+
+    // Update the order status to 'completed' in the orders table
+    await db.execute("UPDATE orders SET status = 'complete' WHERE id = ?", [
+      db_order_id,
+    ]);
+
+    // empty the cart
+    await db.execute("DELETE FROM cart WHERE user_id = ?", [req.user.id]);
+
     res.status(200).json({ message: "Payment recorded!" });
   } catch (err) {
     console.error(err);

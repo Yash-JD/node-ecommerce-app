@@ -16,9 +16,7 @@ module.exports.getAllItems = async (req, res) => {
       mergeImagesWithProducts(data, images);
       return res.status(200).send({ success: true, data: data });
     } else {
-      return res
-        .status(404)
-        .send({ success: false, message: "NO product found" });
+      return res.send({ success: false, message: "NO product found" });
     }
   } catch (error) {
     return res.status(500).send({

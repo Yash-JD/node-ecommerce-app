@@ -19,38 +19,15 @@ const upload = require("../config/multerStorage");
 
 router.get("/categories", checkAuth, isSeller, getAllCategories);
 
-router.route("/").get(getAllProducts).post(
-  checkAuth,
-  isSeller,
-  // (req, res, next) => {
-  //   upload(req, res, (err) => {
-  //     if (err) {
-  //       return res.status(400).json({ error: err.message });
-  //     }
-  //     next(); // Proceed to addProduct
-  //   });
-  // },
-  upload,
-  addProduct
-);
+router
+  .route("/")
+  .get(checkAuth, getAllProducts)
+  .post(checkAuth, isSeller, upload, addProduct);
 
 router
   .route("/:id")
-  .get(getProductById)
-  .patch(
-    checkAuth,
-    isSeller,
-    checkSellerProducts,
-    (req, res, next) => {
-      upload(req, res, (err) => {
-        if (err) {
-          return res.status(400).json({ error: err.message });
-        }
-        next(); // Proceed to updateProduct
-      });
-    },
-    updateProduct
-  )
+  .get(checkAuth, getProductById)
+  .patch(checkAuth, isSeller, checkSellerProducts, upload, updateProduct)
   .delete(checkAuth, isSeller, checkSellerProducts, deleteProduct);
 
 module.exports = router;

@@ -3,6 +3,35 @@ const { fetchImages, mergeImagesWithProducts } = require("../utils/helpers");
 
 module.exports.getAllProducts = async (req, res) => {
   try {
+    const { role, id } = req.user;
+
+    // check if user is seller
+    if (role === "seller") {
+      // check if seller has products
+      const [sellerProducts] = await db.query(
+        `SELECT products.id, products.name, products.description, products.price, products.quantity, category.category
+       FROM products
+       INNER JOIN category ON products.category_id = category.id
+       INNER JOIN users ON products.seller_id = users.id
+       WHERE users.id = ?`,
+        [id]
+      );
+
+      if (sellerProducts.length > 0) {
+        const images = await fetchImages(sellerProducts);
+        const products = mergeImagesWithProducts(sellerProducts, images);
+        return res.status(200).send({
+          success: true,
+          products: products,
+        });
+      } else {
+        return res.status(404).send({
+          success: false,
+          message: "No products found for this seller.",
+        });
+      }
+    }
+
     const { category } = req.query;
     const limit = parseInt(req.query.quantity) || 10;
 
@@ -170,51 +199,65 @@ module.exports.getProductById = async (req, res) => {
 
 module.exports.updateProduct = async (req, res) => {
   try {
-    // check if there is image to be updated ?
-    // const image = req.files;
-    // if (image) {
-    //   // // upload image to cloudinary
-    //   // const imageUrl = await uploadFileToCloudinary(image, "e-commerce");
-    //   // console.log(imageUrl.secure_url);
-    //   // if (!imageUrl) {
-    //   //   return res.status(400).json({
-    //   //     message: "Failed to upload image to Cloudinary",
-    //   //   });
-    //   // }
-    //   // query += "imageUrl=?  ";
-    //   // data.push(imageUrl.secure_url);
-    // }
-
-    // create query and data to be updated
+    delete req.body.id;
+    delete req.body.imageUrls;
+    const productId = req.params.id;
     let query = `UPDATE products SET `;
     let data = [];
-    for (let i in req.body) {
-      query += i + "=?, ";
-      data.push(req.body[i]);
+    let updateFields = [];
+
+    // Handle category update
+    if (req.body.category) {
+      let [insertResult] = await db.query(
+        "INSERT INTO category(category) VALUES (?)",
+        [req.body.category]
+      );
+      categoryId = insertResult.insertId;
+
+      updateFields.push("category_id=?");
+      data.push(categoryId);
+      delete req.body.category;
     }
 
-    // remove extra comma & space
-    query = query.slice(0, -2);
+    // Add other fields to update
+    for (let key in req.body) {
+      updateFields.push(`${key}=?`);
+      data.push(req.body[key]);
+    }
 
-    query += " WHERE id=?";
-    data.push(req.params.id);
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No data to update.",
+      });
+    }
 
-    // console.log({ query });
+    // Build and execute the update query for products
+    if (updateFields.length > 0) {
+      query += updateFields.join(", ");
+      query += " WHERE id=?";
+      data.push(req.params.id);
+      await db.execute(query, data);
+    }
 
-    await db
-      .execute(query, data)
-      .then(() => {
-        return res.status(200).json({
-          success: true,
-          message: "Data updated successfully.",
-        });
-      })
-      .catch((err) =>
-        res.status(400).send({
-          success: false,
-          message: err,
-        })
-      );
+    // Handle image update if files are provided
+    // if (req.files && req.files.length > 0) {
+    //   // Optionally, delete old images first:
+    //   await db.execute("DELETE FROM images WHERE product_id = ?", [productId]);
+    //   // Insert new images
+    //   const imagesUrls = req.files.map((file) => file.path);
+    //   for (const img of imagesUrls) {
+    //     await db.execute(
+    //       "INSERT INTO images(product_id, image_urls) VALUES (?,?)",
+    //       [productId, img]
+    //     );
+    //   }
+    // }
+
+    return res.status(200).json({
+      success: true,
+      message: "Product updated successfully.",
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,

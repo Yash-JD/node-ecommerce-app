@@ -9,8 +9,8 @@ const {
   addPaymentToDB,
 } = require("../controllers/payment.controller");
 
-router.get("/", renderProductPage);
-router.post("/createOrder", makePayment);
-// router.post("/paymentSuccess", addPaymentToDB);
+// router.get("/", renderProductPage);
+router.post("/createOrder", checkAuth, makePayment);
+router.post("/paymentSuccess", checkAuth, addPaymentToDB);
 
 module.exports = router;
